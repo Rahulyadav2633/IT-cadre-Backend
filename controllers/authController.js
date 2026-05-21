@@ -106,6 +106,9 @@ exports.login = async (req, res) => {
     const sent = { mobile: false, email: false };
     const promises = [];
 
+    // Use NODE_ENV to check for production
+    const isProd = process.env.NODE_ENV === "production";
+
     if (user.mobile) {
       promises.push(
         sendSMSOTP(user.mobile, otp, "login")
@@ -124,10 +127,18 @@ exports.login = async (req, res) => {
           .catch((e) => console.error("Email OTP failed:", e.message)),
       );
     }
-    await Promise.allSettled(promises);
+    // Wait with a reasonable timeout (e.g., 5 seconds) to prevent hanging
+    const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 5000));
+    
+    if (promises.length > 0) {
+      await Promise.race([
+        Promise.allSettled(promises),
+        timeoutPromise
+      ]);
+    }
 
-    if (process.env.EMAIL_USER !== "production") {
-      console.log(`🔐 DEV LOGIN OTP for ${user.email}: ${otp}`);
+    if (!isProd) {
+      console.log(`🔐 DEV LOGIN OTP for ${user.email || user.mobile}: ${otp}`);
     }
 
     res.json({
@@ -135,11 +146,12 @@ exports.login = async (req, res) => {
       otpSent: true,
       mobile: user.mobile,
       email: user.email,
-      sent, // tells frontend which channels worked
+      sent, // tells frontend which channels worked (might be false if timed out)
       message: "OTP sent to your registered mobile and email",
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error("Login Error:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 

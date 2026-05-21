@@ -41,7 +41,7 @@ exports.sendSMSOTP = async (mobile, otp, purpose = "login") => {
   } catch (err) {
     console.error("❌ SMS Error:", err.message);
     // In development, log OTP to console as fallback
-    if (process.env.FAST2SMS_API_KEY !== "production") {
+    if (process.env.NODE_ENV !== "production") {
       console.log(`🔐 DEV MODE — OTP for ${mobile}: ${otp}`);
       return true; // Don't crash in dev
     }
