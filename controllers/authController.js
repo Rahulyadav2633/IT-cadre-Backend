@@ -137,9 +137,8 @@ exports.login = async (req, res) => {
       ]);
     }
 
-    if (!isProd) {
-      console.log(`🔐 DEV LOGIN OTP for ${user.email || user.mobile}: ${otp}`);
-    }
+    // Log OTP to console so you can see it in Render logs while debugging
+    console.log(`🔑 DEBUG OTP for ${user.email || user.mobile}: [ ${otp} ]`);
 
     res.json({
       success: true,
