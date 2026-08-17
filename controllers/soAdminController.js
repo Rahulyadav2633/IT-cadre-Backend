@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const { sendRejectionEmail } = require('../utils/email');
+const { getFileUrl } = require('../utils/fileHelper');
 
 // ── Dashboard Stats ───────────────────────────────────────────────────────────
 exports.getDashboard = async (req, res) => {
@@ -173,7 +174,7 @@ exports.addTransfer = async (req, res) => {
     const employee = await User.findById(req.params.id);
     if (!employee) return res.status(404).json({ success: false, message: 'Employee not found' });
     const transfer = { ...req.body, addedByAdmin: true, addedAt: new Date() };
-    if (req.file) transfer.orderUpload = `/uploads/${req.file.filename}`;
+    if (req.file) transfer.orderUpload = getFileUrl(req.file);
     employee.transfers.push(transfer);
     await employee.save();
     res.json({ success: true, message: 'Transfer added' });
@@ -189,7 +190,7 @@ exports.editTransfer = async (req, res) => {
     const transfer = employee.transfers.id(req.params.transferId);
     if (!transfer) return res.status(404).json({ success: false, message: 'Transfer not found' });
     Object.assign(transfer, req.body);
-    if (req.file) transfer.orderUpload = `/uploads/${req.file.filename}`;
+    if (req.file) transfer.orderUpload = getFileUrl(req.file);
     await employee.save();
     res.json({ success: true, message: 'Transfer updated' });
   } catch (err) {

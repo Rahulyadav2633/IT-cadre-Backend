@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const { getFileUrl } = require('../utils/fileHelper');
 
 // ── Get Profile ───────────────────────────────────────────────────────────────
 exports.getProfile = async (req, res) => {
@@ -58,7 +59,7 @@ exports.saveExperience = async (req, res) => {
     let experiences = JSON.parse(req.body.experiences || '[]');
     experiences = experiences.map((exp, i) => {
       if (req.files && req.files[`experienceCertificate_${i}`]) {
-        exp.experienceCertificate = `/uploads/${req.files[`experienceCertificate_${i}`][0].filename}`;
+        exp.experienceCertificate = getFileUrl(req.files[`experienceCertificate_${i}`][0]);
       }
       return exp;
     });
@@ -78,7 +79,7 @@ exports.saveTransfers = async (req, res) => {
     let transfers = JSON.parse(req.body.transfers || '[]');
     transfers = transfers.map((t, i) => {
       if (req.files && req.files[`orderUpload_${i}`]) {
-        t.orderUpload = `/uploads/${req.files[`orderUpload_${i}`][0].filename}`;
+        t.orderUpload = getFileUrl(req.files[`orderUpload_${i}`][0]);
       }
       return t;
     });
@@ -98,7 +99,7 @@ exports.saveTraining = async (req, res) => {
     let trainings = JSON.parse(req.body.trainings || '[]');
     trainings = trainings.map((t, i) => {
       if (req.files && req.files[`trainingCertificate_${i}`]) {
-        t.trainingCertificate = `/uploads/${req.files[`trainingCertificate_${i}`][0].filename}`;
+        t.trainingCertificate = getFileUrl(req.files[`trainingCertificate_${i}`][0]);
       }
       return t;
     });
@@ -176,9 +177,39 @@ exports.editFull = async (req, res) => {
     user.soActionAt     = undefined;
     user.dsActionAt     = undefined;
 
-    if (req.file) user.photograph = `/uploads/${req.file.filename}`;
+    if (req.file) user.photograph = getFileUrl(req.file);
     await user.save();
     res.json({ success: true, message: 'Profile updated. Pending SO review.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Mark Notification Read ──────────────────────────────────────────────────
+exports.markNotificationRead = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    const notif = user.notifications.id(req.params.id);
+    if (!notif) return res.status(404).json({ success: false, message: 'Notification not found' });
+    notif.isRead = true;
+    await user.save();
+    res.json({ success: true, message: 'Notification marked as read' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Dismiss Notification ────────────────────────────────────────────────────
+exports.dismissNotification = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    const notif = user.notifications.id(req.params.id);
+    if (!notif) return res.status(404).json({ success: false, message: 'Notification not found' });
+    notif.isDismissed = true;
+    await user.save();
+    res.json({ success: true, message: 'Notification dismissed' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

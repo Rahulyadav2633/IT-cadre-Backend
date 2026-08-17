@@ -12,6 +12,8 @@ const {
   saveTraining,
   editProfile,
   editFull,
+  markNotificationRead,
+  dismissNotification,
 } = require('../controllers/employeeController');
 
 router.get ('/profile',     protect, getProfile);
@@ -34,5 +36,8 @@ router.post('/training',    protect, upload.fields([
 ]), saveTraining);
 router.put ('/edit',        protect, upload.single('photograph'), editProfile);
 router.put ('/edit-full',   protect, upload.single('photograph'), editFull);
+router.put ('/notifications/:id/read',    protect, markNotificationRead);
+router.delete('/notifications/:id/dismiss', protect, dismissNotification);
 
 module.exports = router;
+

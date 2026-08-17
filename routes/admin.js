@@ -149,8 +149,6 @@ router.delete("/announcements/:id", protect, dsOnly, async (req, res) => {
   }
 });
 
-module.exports = router;
-
 // ── SO Admin — Send Notification to Employee ──────────────────────────────────
 router.post("/notify-employee/:id", protect, soOnly, async (req, res) => {
   try {
@@ -178,3 +176,6 @@ router.post("/notify-employee/:id", protect, soOnly, async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
+module.exports = router;
+

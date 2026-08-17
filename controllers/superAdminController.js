@@ -1,5 +1,6 @@
 const User         = require('../models/User');
 const Announcement = require('../models/Announcement');
+const { getFileUrl } = require('../utils/fileHelper');
 
 // ── Helper ─────────────────────────────────────────────────────────────────────
 const safeUser = (u) => ({
@@ -67,14 +68,15 @@ exports.getAllUsers = async (req, res) => {
 };
 
 
-// 
+// ── Get Single Employee ───────────────────────────────────────────────────────
 exports.getEmployee = async (req, res) => {
   try {
     const employee = await User.findById(req.params.id).select('-password');
     if (!employee) return res.status(404).json({ success: false, message: 'Employee not found' });
-    const obj     = employee.toObject();
-    obj.deptYears = getDeptYears(employee);
-    obj.deptAlert = obj.deptYears > 4;
+    const obj = employee.toObject();
+    const yearsInDept = calcYearsInDept(employee);
+    obj.deptYears = Math.round(yearsInDept * 10) / 10;
+    obj.deptAlert = yearsInDept >= 4;
     res.json({ success: true, employee: obj });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -426,7 +428,7 @@ exports.addTransfer = async (req, res) => {
       addressOfOrganisation: req.body.addressOfOrganisation, remarks: req.body.remarks,
       addedByAdmin: true, addedAt: new Date(),
     };
-    if (req.file) transfer.orderUpload = `/uploads/${req.file.filename}`;
+    if (req.file) transfer.orderUpload = getFileUrl(req.file);
     employee.transfers.push(transfer);
     await employee.save();
     res.json({ success: true, message: 'Transfer added' });
@@ -535,17 +537,6 @@ exports.createAnnouncement = async (req, res) => {
       createdByName: `${req.user.firstName} ${req.user.lastName}`,
     });
     res.json({ success: true, announcement: ann });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-// ── Get Single Employee (for detail page) ─────────────────────────────────────
-exports.getEmployee = async (req, res) => {
-  try {
-    const employee = await User.findById(req.params.id).select('-password');
-    if (!employee) return res.status(404).json({ success: false, message: 'Not found' });
-    res.json({ success: true, employee });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

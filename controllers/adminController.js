@@ -1,4 +1,5 @@
-  const User = require('../models/User');
+const User = require('../models/User');
+const { getFileUrl } = require('../utils/fileHelper');
 
 // ── Helper: calc years in current department ──────────────────────────────────
 const calcYearsInDept = (employee) => {
@@ -338,7 +339,7 @@ exports.addTransfer = async (req, res) => {
       addressOfOrganisation: req.body.addressOfOrganisation, remarks: req.body.remarks,
       addedByAdmin: true, addedAt: new Date(),
     };
-    if (req.file) transfer.orderUpload = `/uploads/${req.file.filename}`;
+    if (req.file) transfer.orderUpload = getFileUrl(req.file);
     employee.transfers.push(transfer);
     await employee.save();
     res.json({ success: true, message: 'Transfer added successfully' });
@@ -365,7 +366,7 @@ exports.editTransfer = async (req, res) => {
       orderDate: req.body.orderDate || transfer.orderDate,
       remarks: req.body.remarks !== undefined ? req.body.remarks : transfer.remarks,
     });
-    if (req.file) transfer.orderUpload = `/uploads/${req.file.filename}`;
+    if (req.file) transfer.orderUpload = getFileUrl(req.file);
     await employee.save();
     res.json({ success: true, message: 'Transfer updated' });
   } catch (err) {

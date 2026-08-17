@@ -1,16 +1,13 @@
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.EMAIL_PORT) || 465,
-  secure: (process.env.EMAIL_PORT == 465 || !process.env.EMAIL_PORT), // Use secure for 465
+  service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
   },
-  tls: {
-    rejectUnauthorized: false
-  }
+  debug: true,
+  logger: true
 });
 
 exports.sendOTPEmail = async (email, otp, purpose = 'registration') => {
@@ -65,12 +62,6 @@ exports.sendRejectionEmail = async (toEmail, firstName, message, type, adminName
       </div>
     </div>
   `;
-
-  const transporter = require('nodemailer').createTransport({
-    host: process.env.EMAIL_HOST, port: parseInt(process.env.EMAIL_PORT),
-    secure: false,
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-  });
 
   await transporter.sendMail({
     from: `"Cadre Portal" <${process.env.EMAIL_USER}>`,
